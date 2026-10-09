@@ -62,6 +62,10 @@ docker/
   docker-compose.test-postgres-db.yml  Postgres-only (for running server locally)
   Caddyfile                 TLS termination + gRPC proxying on port 443
 tests/                      CSV test fixtures + expected outputs
+docs/images/                README screenshots
+e2e/                        Local end-to-end lab (own README + Makefile): builds the netbird fork,
+                            the integrations module and this repo from sibling checkouts; Dex,
+                            dashboard, peers with policies + a routed network, traffic + checks
 ```
 
 ---

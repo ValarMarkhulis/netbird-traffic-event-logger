@@ -1,0 +1,40 @@
+# Local OIDC provider for the dashboard and API.
+# The issuer must be the URL the *browser* uses; management fetches the JWKS
+# over the docker network instead (see AuthKeysLocation in management.json).
+issuer: http://localhost:5556/dex
+
+storage:
+  type: sqlite3
+  config:
+    file: /var/dex/dex.db
+
+web:
+  http: 0.0.0.0:5556
+  allowedOrigins: ["*"]
+
+oauth2:
+  skipApprovalScreen: true
+  # Enables the password grant, used by scripts/bootstrap.sh to get a token.
+  passwordConnector: local
+  responseTypes: ["code"]
+
+expiry:
+  idTokens: 24h
+
+enablePasswordDB: true
+
+staticClients:
+  - id: netbird-dashboard
+    name: NetBird Dashboard
+    public: true
+    redirectURIs:
+      - http://localhost:8080/nb-auth
+      - http://localhost:8080/nb-silent-auth
+      - http://localhost:8080/
+
+staticPasswords:
+  - email: admin@netbird.local
+    # bcrypt of "password"
+    hash: "$2a$10$c5Row4MqavezZnHaeRI1LOwUBqGaW315rIbKM1jn2iK/f77rai48."
+    username: admin
+    userID: 3f1c2b6e-9a4d-4c1e-8f0a-1b2c3d4e5f60

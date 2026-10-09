@@ -1,0 +1,43 @@
+{
+    "Stuns": [],
+    "TURNConfig": {
+        "Turns": [],
+        "CredentialsTTL": "12h",
+        "Secret": "secret",
+        "TimeBasedCredentials": false
+    },
+    "Relay": {
+        "Addresses": ["rel://relay:33080"],
+        "CredentialsTTL": "24h",
+        "Secret": "local-e2e-relay-secret"
+    },
+    "Signal": {
+        "Proto": "http",
+        "URI": "signal:10000",
+        "Username": "",
+        "Password": null
+    },
+    "ReverseProxy": {
+        "TrustedHTTPProxies": [],
+        "TrustedHTTPProxiesCount": 0,
+        "TrustedPeers": ["0.0.0.0/0"]
+    },
+    "DisableDefaultPolicy": false,
+    "Datadir": "/var/lib/netbird",
+    "DataStoreEncryptionKey": "caWtX7EMvXJm4vxKRleQ7qUe2XmqUi8Kw4VKhjFxvvw=",
+    "StoreConfig": {
+        "Engine": "sqlite"
+    },
+    "HttpConfig": {
+        "Address": "0.0.0.0:80",
+        "AuthIssuer": "http://localhost:5556/dex",
+        "AuthAudience": "netbird-dashboard",
+        "AuthKeysLocation": "http://dex:5556/dex/keys",
+        "AuthUserIDClaim": "",
+        "IdpSignKeyRefreshEnabled": false,
+        "OIDCConfigEndpoint": ""
+    },
+    "IdpManagerConfig": {
+        "ManagerType": "none"
+    }
+}

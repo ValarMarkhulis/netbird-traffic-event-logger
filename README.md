@@ -201,6 +201,23 @@ make run-test-env
 
 Then try to send some events with the client, and see that they are being stored in the "event_logs" database table.
 
+## End-to-end lab
+[`e2e/`](e2e/README.md) runs the whole stack on localhost from source: this repo's flow server and
+ETL, the modified NetBird management, signal, relay and dashboard, and a set of NetBird peers with
+access policies and a routed network that generate allowed, blocked and routed traffic. Log in to
+the dashboard at http://localhost:8080 and watch it arrive under Traffic Events.
+
+It needs the [netbird fork](https://github.com/ValarMarkhulis/netbird/tree/v0.53.0-traffic-event-logging-unlocked)
+and [management-integrations-flow-enabled](https://github.com/ValarMarkhulis/management-integrations-flow-enabled)
+checked out next to this repo:
+
+```bash
+cd e2e
+make e2e            # build + start everything, set up peers and policies, generate traffic
+make check-events   # verify what the protocol probes reported
+make seed           # or load recorded events instead of waiting for live traffic
+```
+
 
 ## TODOs:
 - [x] Implement POC service for reciving and storing the events in a postgres database
