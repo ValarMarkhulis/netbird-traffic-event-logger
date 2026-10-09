@@ -1,5 +1,9 @@
 package transformer
 
+// FilterByProtocol splits events into ingress and egress, keeping only
+// protocols the Group stage can correlate. SCTP, GRE and other protocols are
+// dropped here and never become sessions; see "Protocols outside TCP / UDP /
+// ICMP" in go-etl/README.md.
 func FilterByProtocol(events []Event) (ingressEvents, egressEvents []Event) {
 	for _, e := range events {
 		if e.Protocol == "TCP" || e.Protocol == "UDP" || e.Protocol == "ICMP" || e.Protocol == "ICMPv6" {
