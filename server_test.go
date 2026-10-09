@@ -219,6 +219,31 @@ func TestFlowEventToDatabaseEvent(t *testing.T) {
 	}
 }
 
+func TestFlowEventToDatabaseEvent_KeepsAnyIPProtocolNumber(t *testing.T) {
+	newEvent := func(protocol uint32) *proto.FlowEvent {
+		eventID, flowID := uuid.New(), uuid.New()
+		return &proto.FlowEvent{
+			EventId:    eventID[:],
+			Timestamp:  timestamppb.Now(),
+			FlowFields: &proto.FlowFields{FlowId: flowID[:], Protocol: protocol},
+		}
+	}
+
+	for protocol, want := range map[uint32]string{
+		0:   "0",    // userspace drop of a protocol the client doesn't classify
+		47:  "47",   // GRE, reported by kernel conntrack
+		50:  "50",   // ESP
+		132: "SCTP", // named
+	} {
+		got, err := FlowEventToDatabaseEvent(newEvent(protocol))
+		assert.NoError(t, err, "protocol %d", protocol)
+		assert.Equal(t, want, got.FlowFields.Protocol, "protocol %d", protocol)
+	}
+
+	_, err := FlowEventToDatabaseEvent(newEvent(256))
+	assert.ErrorContains(t, err, "invalid IP protocol number 256")
+}
+
 func TestFlowEventToDatabaseEvent_RequiresTimestamp(t *testing.T) {
 	eventID, flowID := uuid.New(), uuid.New()
 	newEvent := func(ts *timestamppb.Timestamp) *proto.FlowEvent {
