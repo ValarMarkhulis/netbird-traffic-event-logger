@@ -1,0 +1,65 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: netbird_traffic_postgres
+    environment:
+      POSTGRES_DB: netbird_traffic_event_logging
+      POSTGRES_USER: netbird
+      POSTGRES_PASSWORD: netbird
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U netbird -d netbird_traffic_event_logging"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  flow-server:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: flow-server
+    command: ["--debug"]
+    ports:
+      - "9000:9000"
+    environment:
+      - POSTGRES_USER=netbird
+      - POSTGRES_PASSWORD=netbird
+      - DATABASE_ADDR=postgres
+      - POSTGRES_DB=netbird_traffic_event_logging
+      - POSTGRES_PORT=5432
+      - POSTGRES_SSL=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "grpc_health_probe", "-addr=:9000"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  etl:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.etl
+    environment:
+      - POSTGRES_USER=netbird
+      - POSTGRES_PASSWORD=netbird
+      - POSTGRES_DB=netbird_traffic_event_logging
+      - DATABASE_ADDR=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_SSL=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+      flow-server:
+        condition: service_healthy
+    command: ["--incremental"]
+
+volumes:
+  postgres_data:

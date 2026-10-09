@@ -1,0 +1,27 @@
+# Build context must be the repository root:
+#   docker build -f docker/Dockerfile.etl -t etl_runner .
+
+# Build stage
+FROM golang:1.25-alpine AS builder
+
+WORKDIR /src
+COPY go.mod go.sum ./
+RUN --mount=type=cache,target=/go/pkg/mod go mod download
+
+# Only copy the packages the ETL binary actually imports.
+# Changes to server.go, client/, tests/, docker/, etc. won't bust this cache layer.
+COPY database/ ./database/
+COPY go-etl/   ./go-etl/
+
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    CGO_ENABLED=0 GOOS=linux go build -trimpath -o /etl_runner ./go-etl/
+
+# Runtime stage — distroless includes CA certificates and runs as nonroot (UID 65532).
+FROM gcr.io/distroless/static-debian12:nonroot
+
+COPY --from=builder /etl_runner /app/etl_runner
+
+# Default: daemon incremental mode. Override CMD to use --db, --seed, or CSV mode.
+ENTRYPOINT ["/app/etl_runner"]
+CMD ["--incremental"]

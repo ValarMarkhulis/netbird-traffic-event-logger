@@ -1,0 +1,24 @@
+Session 1: dAnonPeer5AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= connected to port 3389/TCP via EAnonPeer2AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= as routing peer.
+  Flow IDs: 03f17b6b-3ae1-49c7-b8a5-659a931ffd22, ebd76e91-f9fd-4686-8243-b43db5d560b9
+  Source ports used: 54278, 54280
+  Source IPs: 100.67.146.229
+  Destination IPs: 192.168.4.2
+  Start: 2025-12-06 15:44:06.044006
+  End:   2025-12-06 15:45:36.044693
+  RX Packets: 369
+  TX Packets: 362
+  RX Bytes:   109740
+  TX Bytes:   96051
+
+Session 2: dAnonPeer5AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= connected to port 3389/UDP via EAnonPeer2AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= as routing peer.
+  Flow IDs: 799e1b11-2d7c-4ef6-94be-3777cd915078
+  Source ports used: 64551
+  Source IPs: 100.67.146.229
+  Destination IPs: 192.168.4.2
+  Start: 2025-12-06 15:44:11.049530
+  End:   2025-12-06 15:46:11.045738
+  RX Packets: 1972
+  TX Packets: 1074
+  RX Bytes:   1922914
+  TX Bytes:   356696
+
