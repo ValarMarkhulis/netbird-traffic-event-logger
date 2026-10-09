@@ -4,8 +4,8 @@ go 1.25.0
 
 require (
 	github.com/joho/godotenv v1.5.1
-	github.com/netbirdio/netbird v0.53.0
-	github.com/stretchr/testify v1.10.0
+	github.com/netbirdio/netbird v0.65.3
+	github.com/stretchr/testify v1.11.1
 	google.golang.org/grpc v1.82.1
 	gorm.io/gorm v1.25.12
 )
@@ -33,20 +33,20 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
-	github.com/pion/transport/v3 v3.0.7 // indirect
+	github.com/pion/transport/v3 v3.1.1 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/things-go/go-socks5 v0.0.5 // indirect
-	github.com/vishvananda/netlink v1.3.0 // indirect
+	github.com/vishvananda/netlink v1.3.1 // indirect
 	github.com/vishvananda/netns v0.0.5 // indirect
 	golang.org/x/net v0.56.0 // indirect
 	golang.org/x/text v0.40.0 // indirect
-	golang.org/x/time v0.11.0 // indirect
+	golang.org/x/time v0.14.0 // indirect
 	golang.zx2c4.com/wintun v0.0.0-20230126152724-0fa3db229ce2 // indirect
 	golang.zx2c4.com/wireguard v0.0.0-20231211153847-12269c276173 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260414002931-afd174a4e478 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 	gorm.io/driver/postgres v1.5.11
-	gvisor.dev/gvisor v0.0.0-20231020174304-b8a429915ff1 // indirect
+	gvisor.dev/gvisor v0.0.0-20251031020517-ecfcdd2f171c // indirect
 )
 
 replace github.com/netbirdio/management-integrations/integrations => github.com/ValarMarkhulis/management-integrations-flow-enabled/integrations v0.0.0-20250714094303-759db8f0ff9f
