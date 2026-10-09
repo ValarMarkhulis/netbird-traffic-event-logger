@@ -479,23 +479,13 @@ func FlowEventToDatabaseEvent(event *proto.FlowEvent) (dbEvent database.EventLog
 		direction = database.DirectionUnknown // Default to Unknown if the value is invalid
 	}
 
-	// Parse the protocol from the event
-	var protocol database.Protocol
-	switch event.FlowFields.Protocol {
-	case uint32(database.ICMP):
-		protocol = database.ICMP
-	case uint32(database.TCP):
-		protocol = database.TCP
-	case uint32(database.UDP):
-		protocol = database.UDP
-	case uint32(database.ICMPv6):
-		protocol = database.ICMPv6
-	case uint32(database.SCTP):
-		protocol = database.SCTP
-	default:
-		slog.Warn("Invalid Protocol value", "value", event.FlowFields.Protocol)
-		// protocol = database.ProtocolUnknown // Don't set a default value if the protocol is unknown, so we don't loose data
+	// Keep any IP protocol number: String() names the common ones and prints
+	// the number for the rest, e.g. "47" for GRE from a kernel-mode peer, or
+	// "0" for drops of non-TCP/UDP/ICMP traffic in userspace mode.
+	if event.FlowFields.Protocol > 255 {
+		return dbEvent, fmt.Errorf("event %s has invalid IP protocol number %d", eventUUID, event.FlowFields.Protocol)
 	}
+	protocol := database.Protocol(event.FlowFields.Protocol)
 
 	// Parse RuleID from the event
 	ruleID := string(event.FlowFields.RuleId)
@@ -535,7 +525,13 @@ func FlowEventToDatabaseEvent(event *proto.FlowEvent) (dbEvent database.EventLog
 		event.FlowFields.RxPackets, "TX_Packets", event.FlowFields.TxPackets, "RX_Bytes",
 		event.FlowFields.RxBytes, "TX_Bytes", event.FlowFields.TxBytes)
 
+	if ts := event.GetTimestamp(); ts == nil || !ts.IsValid() {
+		return dbEvent, fmt.Errorf("event %s has no valid timestamp", eventUUID)
+	}
+	eventTime := event.GetTimestamp().AsTime()
+
 	dbEvent = database.EventLog{
+		EventTime: eventTime,
 		EventId:   eventUUID.String(),
 		PublicKey: publicKey,
 		FlowFields: &database.FlowFields{

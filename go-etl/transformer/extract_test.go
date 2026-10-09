@@ -1,7 +1,10 @@
 package transformer
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -69,4 +72,22 @@ func TestSafeInt_InvalidReturnsZero(t *testing.T) {
 
 func TestSafeInt_EmptyReturnsZero(t *testing.T) {
 	assert.Equal(t, 0, safeInt(""))
+}
+
+func TestExtract_CSVUsesEventTime(t *testing.T) {
+	csv := "created_at,event_time,protocol,flow_id\n" +
+		"2025-01-01 12:01:00+00,2025-01-01 12:00:13+00,TCP,flow1\n"
+	path := filepath.Join(t.TempDir(), "events.csv")
+	if err := os.WriteFile(path, []byte(csv), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	events := Extract(path)
+
+	if len(events) != 1 {
+		t.Fatalf("expected 1 event, got %d", len(events))
+	}
+	if want := time.Date(2025, 1, 1, 12, 0, 13, 0, time.UTC); !events[0].EventTime.Equal(want) {
+		t.Errorf("got %v, want event_time %v", events[0].EventTime, want)
+	}
 }

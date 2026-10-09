@@ -43,7 +43,7 @@ func ExtractFromDB(dbEvents []database.EventLog) []Event {
 			SourceIP:         ff.SourceIp,
 			DestIP:           ff.DestIp,
 			Type:             ff.Type,
-			CreatedAt:        e.CreatedAt,
+			EventTime:        e.EventTime,
 			RxPackets:        int(ff.RxPackets),
 			TxPackets:        int(ff.TxPackets),
 			RxBytes:          int(ff.RxBytes),

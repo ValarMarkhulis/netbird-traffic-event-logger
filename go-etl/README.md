@@ -30,7 +30,8 @@ Raw events (CSV or DB)
    1. Extract        — parse CSV or query the DB for events in the time window
         │
         ▼
-   2. Filter         — keep TCP / UDP / ICMP; split into ingress and egress sets
+   2. Filter         — keep TCP / UDP / ICMP / ICMPv6; split into ingress and egress sets
+        │              (other protocols are skipped, see below)
         │
         ▼
    3. Group          — correlate ingress ↔ egress by port match (TCP/UDP)
@@ -58,6 +59,19 @@ Raw events (CSV or DB)
 The `--threshold` flag (default `0.5`) controls how sessions are split. When a `TYPE_END` event arrives and the traffic it carries exceeds `threshold × cumulative_traffic`, the algorithm looks for the next `TYPE_START`. If the gap is greater than 2 seconds, the current session is closed and a new one is started.
 
 A threshold of `0.5` means: if a single `TYPE_END` carries more than 50% of all traffic seen so far, it likely marks a real disconnection rather than a mid-session partial close.
+
+### Protocols outside TCP / UDP / ICMP
+
+The Filter stage (`transformer.FilterByProtocol`) only passes TCP, UDP, ICMP and ICMPv6. Events for any other protocol are skipped, so they never become sessions:
+
+- **SCTP** (stored as `SCTP`)
+- **GRE, ESP and every other IP protocol** (stored by number, e.g. `47`, `50`)
+
+The flow server still stores these events in `event_logs`, so they show up in the dashboard's Traffic Events, which reads `event_logs` directly. They're just missing from `session_records`. And because raw events are pruned after the retention window (see [Event log retention](#event-log-retention)), these flows are gone entirely once that window passes.
+
+Only kernel-mode peers report these protocols: kernel conntrack emits start/end events for SCTP (with ports) and for other protocols (by number, no ports). Userspace-mode peers on NetBird v0.53.0 drop such packets silently before any policy check and report nothing.
+
+Adding them would need a correlation rule in the Group stage: SCTP can match by ports like TCP/UDP, but GRE and the rest have no ports, so they'd have to match on source and destination IP plus protocol.
 
 ---
 

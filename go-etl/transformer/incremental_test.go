@@ -31,7 +31,7 @@ func TestApplyGroupIncremental_RefreshesUpdatedAtOnMerge(t *testing.T) {
 		{
 			Type:           "TYPE_START",
 			ConnSourcePort: "59903",
-			CreatedAt:      firstOpenedAt.Add(time.Hour),
+			EventTime:      firstOpenedAt.Add(time.Hour),
 			RxBytes:        1024,
 		},
 	}

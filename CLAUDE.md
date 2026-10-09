@@ -62,6 +62,10 @@ docker/
   docker-compose.test-postgres-db.yml  Postgres-only (for running server locally)
   Caddyfile                 TLS termination + gRPC proxying on port 443
 tests/                      CSV test fixtures + expected outputs
+docs/images/                README screenshots
+e2e/                        Local end-to-end lab (own README + Makefile): builds the netbird fork,
+                            the integrations module and this repo from sibling checkouts; Dex,
+                            dashboard, peers with policies + a routed network, traffic + checks
 ```
 
 ---
@@ -106,6 +110,10 @@ A session represents one logical connection: `(sender_peer, routing_peer, dest_p
 
 ```
 event_logs         — raw flow events; event_id has UNIQUE index
+                     event_time = when it happened on the peer (FlowEvent timestamp; required,
+                     indexed). created_at = when the flow server stored it. Peers report in
+                     batches, so created_at lags event_time by up to the report interval; the
+                     ETL watermark uses created_at (ingest order), sessions use event_time.
 session_records    — aggregated sessions; unique on (sender_peer, routing_peer, dest_port, start_time)
 etl_watermarks     — single row (id=1) tracking last processed event timestamp
 ```

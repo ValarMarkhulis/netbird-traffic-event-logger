@@ -1,0 +1,289 @@
+name: netbird-e2e
+
+x-netbird-build: &netbird-build
+  # The netbird checkout is the build context (it's too big to pass as a named
+  # context, whose own .dockerignore would also apply). Compose resolves
+  # `dockerfile` relative to the context, so it needs this folder's absolute
+  # path: the Makefile exports E2E_DIR; plain `docker compose` uses $PWD.
+  context: ${NETBIRD_SRC:-../../netbird}
+  dockerfile: ${E2E_DIR:-${PWD}}/docker/netbird.Dockerfile
+  additional_contexts:
+    integrations: ${INTEGRATIONS_SRC:-../../management-integrations-flow-enabled/integrations}
+
+x-flow-db-env: &flow-db-env
+  POSTGRES_USER: netbird
+  POSTGRES_PASSWORD: netbird
+  POSTGRES_DB: netbird_traffic_event_logging
+  DATABASE_ADDR: flow-postgres
+  POSTGRES_PORT: "5432"
+  POSTGRES_SSL: disable
+
+services:
+  # ---------------------------------------------------------------- identity
+  dex:
+    image: ghcr.io/dexidp/dex:v2.41.1
+    command: ["dex", "serve", "/etc/dex/config.yaml"]
+    ports:
+      - "5556:5556"
+    volumes:
+      - ./config/dex.yaml:/etc/dex/config.yaml:ro
+      - dex_data:/var/dex
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:5556/dex/.well-known/openid-configuration"]
+      interval: 5s
+      retries: 20
+    restart: unless-stopped
+
+  # ------------------------------------------------------- netbird control plane
+  dashboard:
+    image: netbirdio/dashboard:${DASHBOARD_TAG:-v2.80.0}
+    # The image's init script writes the CSP into the nginx config after
+    # supervisord has already started nginx, and only the Let's Encrypt path
+    # reloads it. Over plain HTTP nginx would keep the built-in https-only CSP,
+    # so run the init script once before nginx starts.
+    entrypoint: ["/bin/sh", "-c", "/usr/local/init_react_envs.sh && exec /usr/bin/supervisord -c /etc/supervisord.conf"]
+    ports:
+      - "8080:80"
+    environment:
+      # Origin-only source: the generated "http://localhost:5556/dex" entry
+      # would only match that exact path, not /dex/token etc.
+      NETBIRD_CSP: http://localhost:5556
+      # Compared as licensed === "true" in the bundle, so must be lowercase.
+      NETBIRD_LICENSED: "true"
+      NETBIRD_MGMT_API_ENDPOINT: http://localhost:8081
+      NETBIRD_MGMT_GRPC_API_ENDPOINT: http://localhost:8081
+      AUTH_AUDIENCE: netbird-dashboard
+      AUTH_CLIENT_ID: netbird-dashboard
+      AUTH_CLIENT_SECRET: ""
+      AUTH_AUTHORITY: http://localhost:5556/dex
+      USE_AUTH0: "false"
+      AUTH_SUPPORTED_SCOPES: openid profile email offline_access
+      AUTH_REDIRECT_URI: /nb-auth
+      AUTH_SILENT_REDIRECT_URI: /nb-silent-auth
+      NETBIRD_TOKEN_SOURCE: idToken
+      NGINX_SSL_PORT: "443"
+      LETSENCRYPT_DOMAIN: none
+    restart: unless-stopped
+
+  signal:
+    build: { <<: *netbird-build, target: signal }
+    image: netbird-e2e/signal:local
+    command: ["--port", "10000", "--log-file", "console", "--log-level", "debug"]
+    restart: unless-stopped
+
+  relay:
+    build: { <<: *netbird-build, target: relay }
+    image: netbird-e2e/relay:local
+    environment:
+      NB_LISTEN_ADDRESS: ":33080"
+      NB_EXPOSED_ADDRESS: rel://relay:33080
+      NB_AUTH_SECRET: local-e2e-relay-secret
+      NB_LOG_LEVEL: info
+    restart: unless-stopped
+
+  management:
+    build: { <<: *netbird-build, target: management }
+    image: netbird-e2e/management:local
+    command:
+      - --port=80
+      - --log-file=console
+      - --log-level=${MGMT_LOG_LEVEL:-debug}
+      - --disable-anonymous-metrics=true
+      - --single-account-mode-domain=netbird.local
+      - --dns-domain=netbird.local
+      - --datadir=/var/lib/netbird
+      - --config=/etc/netbird/management.json
+    ports:
+      - "8081:80"
+    volumes:
+      - ./config/management.json:/etc/netbird/management.json:ro
+      - mgmt_data:/var/lib/netbird
+    environment:
+      # management-integrations-flow-enabled
+      NB_FlowEnabled: "true"
+      NB_FlowPacketCounterEnabled: "true"
+      NB_FLOW_URL: http://flow-server:9000
+      NB_FLOW_INTERVAL_MINUTES: ${FLOW_INTERVAL_MINUTES:-1}
+      NB_FLOW_SECRET: ${FLOW_SECRET:-local-e2e-flow-secret}
+      # netbird fork: GET /api/events/network-traffic
+      NB_NETWORK_TRAFFIC_POSTGRES_DSN: host=flow-postgres user=netbird password=netbird dbname=netbird_traffic_event_logging port=5432 sslmode=disable
+    depends_on:
+      dex: { condition: service_healthy }
+      flow-server: { condition: service_healthy }
+      signal: { condition: service_started }
+      relay: { condition: service_started }
+    restart: unless-stopped
+
+  # ---------------------------------------------------- traffic event logger
+  flow-postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: netbird_traffic_event_logging
+      POSTGRES_USER: netbird
+      POSTGRES_PASSWORD: netbird
+    ports:
+      - "5433:5432"
+    volumes:
+      - flow_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U netbird -d netbird_traffic_event_logging"]
+      interval: 5s
+      retries: 20
+    restart: unless-stopped
+
+  flow-server:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: netbird-e2e/flow-server:local
+    command: ["--debug"]
+    ports:
+      - "9000:9000"
+    environment:
+      <<: *flow-db-env
+      NB_FLOW_SECRET: ${FLOW_SECRET:-local-e2e-flow-secret}
+    depends_on:
+      flow-postgres: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "grpc_health_probe", "-addr=:9000"]
+      interval: 5s
+      retries: 20
+      start_period: 5s
+    restart: unless-stopped
+
+  etl:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.etl
+    image: netbird-e2e/etl:local
+    command: ["--incremental"]
+    environment:
+      <<: *flow-db-env
+      ETL_INTERVAL: ${ETL_INTERVAL:-60}
+    depends_on:
+      flow-server: { condition: service_healthy }
+    restart: unless-stopped
+
+  # ------------------------------------------------------------------ peers
+  # Started by `make peers` once bootstrap has created groups, policies, the
+  # LAN network and one setup key per role (see scripts/bootstrap.sh).
+  # NB_WG_KERNEL_DISABLED forces userspace WireGuard, which puts NetBird's
+  # userspace firewall (uspfilter) in front of the tunnel: it is the only
+  # firewall that reports dropped packets, so blocked flows appear as events.
+  dev-laptop: &peer
+    profiles: ["peers"]
+    build: { <<: *netbird-build, target: client }
+    image: netbird-e2e/client:local
+    hostname: dev-laptop
+    entrypoint: ["/e2e/peer-entrypoint.sh"]
+    cap_add: [NET_ADMIN, SYS_ADMIN, SYS_RESOURCE, NET_RAW, BPF]
+    devices: ["/dev/net/tun:/dev/net/tun"]
+    environment: &peer-env
+      NB_SETUP_KEY: ${SETUP_KEY_DEVELOPERS:-}
+      NB_MANAGEMENT_URL: http://management:80
+      NB_HOSTNAME: dev-laptop
+      NB_LOG_LEVEL: ${PEER_LOG_LEVEL:-info}
+      NB_WG_KERNEL_DISABLED: "true"
+      LISTEN: ""
+    volumes:
+      - ./scripts/peer-entrypoint.sh:/e2e/peer-entrypoint.sh:ro
+      - dev_laptop_data:/var/lib/netbird
+    depends_on:
+      management: { condition: service_started }
+    restart: unless-stopped
+
+  ops-laptop:
+    <<: *peer
+    hostname: ops-laptop
+    environment:
+      <<: *peer-env
+      NB_SETUP_KEY: ${SETUP_KEY_OPS:-}
+      NB_HOSTNAME: ops-laptop
+    volumes:
+      - ./scripts/peer-entrypoint.sh:/e2e/peer-entrypoint.sh:ro
+      - ops_laptop_data:/var/lib/netbird
+
+  web-server:
+    <<: *peer
+    hostname: web-server
+    environment:
+      <<: *peer-env
+      NB_SETUP_KEY: ${SETUP_KEY_WEB_SERVERS:-}
+      NB_HOSTNAME: web-server
+      LISTEN: "http:8000 http:8443"
+    volumes:
+      - ./scripts/peer-entrypoint.sh:/e2e/peer-entrypoint.sh:ro
+      - web_server_data:/var/lib/netbird
+
+  db-server:
+    <<: *peer
+    hostname: db-server
+    environment:
+      <<: *peer-env
+      NB_SETUP_KEY: ${SETUP_KEY_DATABASES:-}
+      NB_HOSTNAME: db-server
+      LISTEN: "tcp:5432 udp:514 sctp:3868"
+    volumes:
+      - ./scripts/peer-entrypoint.sh:/e2e/peer-entrypoint.sh:ro
+      - db_server_data:/var/lib/netbird
+
+  # Kernel WireGuard + iptables, unlike the other peers. Flow events then come
+  # from kernel conntrack, which reports SCTP and any other IP protocol with
+  # its number, but never reports drops.
+  kernel-server:
+    <<: *peer
+    hostname: kernel-server
+    environment:
+      <<: *peer-env
+      NB_SETUP_KEY: ${SETUP_KEY_KERNEL_SERVERS:-}
+      NB_HOSTNAME: kernel-server
+      NB_WG_KERNEL_DISABLED: "false"
+      LISTEN: "tcp:22 sctp:3868"
+    volumes:
+      - ./scripts/peer-entrypoint.sh:/e2e/peer-entrypoint.sh:ro
+      - kernel_server_data:/var/lib/netbird
+
+  # Routing peer for the "Office LAN" NetBird Network (172.30.0.0/24).
+  lan-router:
+    <<: *peer
+    hostname: lan-router
+    environment:
+      <<: *peer-env
+      NB_SETUP_KEY: ${SETUP_KEY_ROUTERS:-}
+      NB_HOSTNAME: lan-router
+      # Enforce route ACLs in uspfilter instead of kernel iptables, so routed
+      # traffic that policies deny is reported as TYPE_DROP, not silently dropped.
+      NB_FORCE_USERSPACE_ROUTER: "true"
+    sysctls:
+      net.ipv4.ip_forward: "1"
+    networks: [default, lan]
+    volumes:
+      - ./scripts/peer-entrypoint.sh:/e2e/peer-entrypoint.sh:ro
+      - lan_router_data:/var/lib/netbird
+
+  # Plain host on the LAN, without NetBird; only reachable through lan-router.
+  lan-app:
+    profiles: ["peers"]
+    image: busybox:1.36
+    hostname: lan-app
+    command: ["sh", "-c", "mkdir -p /www && echo hello-from-lan-app > /www/index.html && head -c 2097152 /dev/urandom > /www/big.bin && exec httpd -f -p 80 -h /www"]
+    networks:
+      lan: { ipv4_address: 172.30.0.10 }
+    restart: unless-stopped
+
+networks:
+  lan:
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24
+
+volumes:
+  dex_data:
+  mgmt_data:
+  flow_pg_data:
+  dev_laptop_data:
+  ops_laptop_data:
+  web_server_data:
+  db_server_data:
+  kernel_server_data:
+  lan_router_data:

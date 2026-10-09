@@ -179,8 +179,15 @@ func DBConnect() (db Database, err error) {
 //// Database models
 
 type EventLog struct {
+	// CreatedAt (from gorm.Model) is when the flow server stored the row. The
+	// ETL watermark relies on it increasing with ingestion order, so it must
+	// stay the ingest time even though clients report events in batches.
 	gorm.Model
-	EventId    string `gorm:"uniqueIndex"`
+	// EventTime is when the event happened on the reporting peer (the
+	// FlowEvent timestamp). Clients batch events, so it can lag CreatedAt by up
+	// to the flow report interval. Sessions and the dashboard use this.
+	EventTime  time.Time `gorm:"not null;index"`
+	EventId    string    `gorm:"uniqueIndex"`
 	PublicKey  string
 	FlowFields *FlowFields `gorm:"embedded"`
 }

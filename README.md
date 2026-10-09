@@ -36,6 +36,16 @@ a specific network route and policy in the Netbird Dashboard. The relevant data 
 - Type
 - Volume of Data
 
+## Traffic Events in the NetBird dashboard
+
+With the [modified NetBird management service](https://github.com/ValarMarkhulis/netbird/tree/v0.53.0-traffic-event-logging-unlocked)
+pointed at this project's database (`NB_NETWORK_TRAFFIC_POSTGRES_DSN`), management serves
+`GET /api/events/network-traffic` from `event_logs`, and the stock dashboard's
+**Activity → Traffic Events** page renders it. Peer-to-peer and routed (Networks resource)
+flows are shown with their start and stop times, protocol, ports and traffic volume:
+
+![Traffic Events page in the NetBird dashboard (v2.80.0, management v0.53.0) showing P2P and routed flows](docs/images/traffic-events-dashboard.png)
+
 
 ## Overall architecture
 
@@ -190,6 +200,23 @@ make run-test-env
 ```
 
 Then try to send some events with the client, and see that they are being stored in the "event_logs" database table.
+
+## End-to-end lab
+[`e2e/`](e2e/README.md) runs the whole stack on localhost from source: this repo's flow server and
+ETL, the modified NetBird management, signal, relay and dashboard, and a set of NetBird peers with
+access policies and a routed network that generate allowed, blocked and routed traffic. Log in to
+the dashboard at http://localhost:8080 and watch it arrive under Traffic Events.
+
+It needs the [netbird fork](https://github.com/ValarMarkhulis/netbird/tree/v0.53.0-traffic-event-logging-unlocked)
+and [management-integrations-flow-enabled](https://github.com/ValarMarkhulis/management-integrations-flow-enabled)
+checked out next to this repo:
+
+```bash
+cd e2e
+make e2e            # build + start everything, set up peers and policies, generate traffic
+make check-events   # verify what the protocol probes reported
+make seed           # or load recorded events instead of waiting for live traffic
+```
 
 
 ## TODOs:

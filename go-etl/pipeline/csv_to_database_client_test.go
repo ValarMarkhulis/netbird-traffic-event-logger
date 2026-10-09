@@ -28,7 +28,7 @@ func tcpEvent(createdAt time.Time) transformer.Event {
 		RuleID:           "rule-1",
 		SourceResourceID: "src-1",
 		DestResourceID:   "dst-1",
-		CreatedAt:        createdAt,
+		EventTime:        createdAt,
 	}
 }
 
@@ -78,7 +78,7 @@ func TestEventToEventLog_ICMPMapsIcmpInfo(t *testing.T) {
 		TxPackets: 4,
 		RxBytes:   336,
 		TxBytes:   336,
-		CreatedAt: ts,
+		EventTime: ts,
 	}
 
 	rec := eventToEventLog(e)
@@ -91,7 +91,7 @@ func TestEventToEventLog_ICMPMapsIcmpInfo(t *testing.T) {
 
 func TestEventToEventLog_PreservesCreatedAt(t *testing.T) {
 	ts := time.Date(2025, 6, 15, 9, 30, 0, 0, time.UTC)
-	e := transformer.Event{Protocol: "TCP", CreatedAt: ts}
+	e := transformer.Event{Protocol: "TCP", EventTime: ts}
 
 	rec := eventToEventLog(e)
 

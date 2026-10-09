@@ -1,0 +1,6 @@
+# Overrides ../netbird/.dockerignore (which only admits the prebuilt client binary).
+.git
+**/*_test.go
+docs
+release_files
+infrastructure_files
