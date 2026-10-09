@@ -27,8 +27,8 @@ func TestSplitSessions_SingleSession(t *testing.T) {
 	end := start.Add(30 * time.Second)
 
 	events := []Event{
-		{Type: "TYPE_START", CreatedAt: start, FlowID: "flow1", ConnSourcePort: "54321", SourceIP: "10.0.0.1", DestIP: "10.0.0.2", RxPackets: 0},
-		{Type: "TYPE_END", CreatedAt: end, FlowID: "flow1", ConnSourcePort: "54321", SourceIP: "10.0.0.1", DestIP: "10.0.0.2", RxPackets: 50},
+		{Type: "TYPE_START", EventTime: start, FlowID: "flow1", ConnSourcePort: "54321", SourceIP: "10.0.0.1", DestIP: "10.0.0.2", RxPackets: 0},
+		{Type: "TYPE_END", EventTime: end, FlowID: "flow1", ConnSourcePort: "54321", SourceIP: "10.0.0.1", DestIP: "10.0.0.2", RxPackets: 50},
 	}
 
 	sessions := SplitSessions(makeGrouped(defaultKey, events), 0.5)
@@ -47,11 +47,11 @@ func TestSplitSessions_TwoSessionsSplitByTrafficAndTimeGap(t *testing.T) {
 	base := t0()
 
 	events := []Event{
-		{Type: "TYPE_START", CreatedAt: base, FlowID: "flow1", ConnSourcePort: "10001", RxPackets: 0},
-		{Type: "TYPE_END", CreatedAt: base.Add(10 * time.Second), FlowID: "flow1", ConnSourcePort: "10001", RxPackets: 100},
+		{Type: "TYPE_START", EventTime: base, FlowID: "flow1", ConnSourcePort: "10001", RxPackets: 0},
+		{Type: "TYPE_END", EventTime: base.Add(10 * time.Second), FlowID: "flow1", ConnSourcePort: "10001", RxPackets: 100},
 		// 15s gap to next TYPE_START — triggers split
-		{Type: "TYPE_START", CreatedAt: base.Add(25 * time.Second), FlowID: "flow2", ConnSourcePort: "10002", RxPackets: 0},
-		{Type: "TYPE_END", CreatedAt: base.Add(35 * time.Second), FlowID: "flow2", ConnSourcePort: "10002", RxPackets: 100},
+		{Type: "TYPE_START", EventTime: base.Add(25 * time.Second), FlowID: "flow2", ConnSourcePort: "10002", RxPackets: 0},
+		{Type: "TYPE_END", EventTime: base.Add(35 * time.Second), FlowID: "flow2", ConnSourcePort: "10002", RxPackets: 100},
 	}
 
 	sessions := SplitSessions(makeGrouped(defaultKey, events), 0.5)
@@ -67,11 +67,11 @@ func TestSplitSessions_NoSplitWhenTimeGapTooSmall(t *testing.T) {
 	base := t0()
 
 	events := []Event{
-		{Type: "TYPE_START", CreatedAt: base, FlowID: "flow1", ConnSourcePort: "10001", RxPackets: 0},
-		{Type: "TYPE_END", CreatedAt: base.Add(10 * time.Second), FlowID: "flow1", ConnSourcePort: "10001", RxPackets: 100},
+		{Type: "TYPE_START", EventTime: base, FlowID: "flow1", ConnSourcePort: "10001", RxPackets: 0},
+		{Type: "TYPE_END", EventTime: base.Add(10 * time.Second), FlowID: "flow1", ConnSourcePort: "10001", RxPackets: 100},
 		// Only 1s gap — too small to split
-		{Type: "TYPE_START", CreatedAt: base.Add(11 * time.Second), FlowID: "flow2", ConnSourcePort: "10002", RxPackets: 0},
-		{Type: "TYPE_END", CreatedAt: base.Add(20 * time.Second), FlowID: "flow2", ConnSourcePort: "10002", RxPackets: 100},
+		{Type: "TYPE_START", EventTime: base.Add(11 * time.Second), FlowID: "flow2", ConnSourcePort: "10002", RxPackets: 0},
+		{Type: "TYPE_END", EventTime: base.Add(20 * time.Second), FlowID: "flow2", ConnSourcePort: "10002", RxPackets: 100},
 	}
 
 	sessions := SplitSessions(makeGrouped(defaultKey, events), 0.5)
@@ -85,7 +85,7 @@ func TestSplitSessions_ZeroTrafficNoEndDropped(t *testing.T) {
 	base := t0()
 
 	events := []Event{
-		{Type: "TYPE_START", CreatedAt: base, FlowID: "flow1", ConnSourcePort: "10001",
+		{Type: "TYPE_START", EventTime: base, FlowID: "flow1", ConnSourcePort: "10001",
 			RxPackets: 0, TxPackets: 0, RxBytes: 0, TxBytes: 0},
 	}
 
@@ -100,8 +100,8 @@ func TestSplitSessions_StartAndEndTimestampsSet(t *testing.T) {
 	end := start.Add(30 * time.Second)
 
 	events := []Event{
-		{Type: "TYPE_START", CreatedAt: start, FlowID: "flow1", ConnSourcePort: "10001", RxPackets: 0},
-		{Type: "TYPE_END", CreatedAt: end, FlowID: "flow1", ConnSourcePort: "10001", RxPackets: 50},
+		{Type: "TYPE_START", EventTime: start, FlowID: "flow1", ConnSourcePort: "10001", RxPackets: 0},
+		{Type: "TYPE_END", EventTime: end, FlowID: "flow1", ConnSourcePort: "10001", RxPackets: 50},
 	}
 
 	sessions := SplitSessions(makeGrouped(defaultKey, events), 0.5)
@@ -119,8 +119,8 @@ func TestSplitSessions_PacketCountsAccumulated(t *testing.T) {
 	base := t0()
 
 	events := []Event{
-		{Type: "TYPE_START", CreatedAt: base, FlowID: "flow1", ConnSourcePort: "10001", RxPackets: 5, TxPackets: 3},
-		{Type: "TYPE_END", CreatedAt: base.Add(30 * time.Second), FlowID: "flow1", ConnSourcePort: "10001", RxPackets: 95, TxPackets: 47},
+		{Type: "TYPE_START", EventTime: base, FlowID: "flow1", ConnSourcePort: "10001", RxPackets: 5, TxPackets: 3},
+		{Type: "TYPE_END", EventTime: base.Add(30 * time.Second), FlowID: "flow1", ConnSourcePort: "10001", RxPackets: 95, TxPackets: 47},
 	}
 
 	sessions := SplitSessions(makeGrouped(defaultKey, events), 0.5)
@@ -137,10 +137,10 @@ func TestMergeSessions_SharedSourcePortMerges(t *testing.T) {
 
 	// Two separate sessions (large gap) but with the same source port
 	events := []Event{
-		{Type: "TYPE_START", CreatedAt: base, FlowID: "flow1", ConnSourcePort: "54321", RxPackets: 0},
-		{Type: "TYPE_END", CreatedAt: base.Add(10 * time.Second), FlowID: "flow1", ConnSourcePort: "54321", RxPackets: 100},
-		{Type: "TYPE_START", CreatedAt: base.Add(25 * time.Second), FlowID: "flow2", ConnSourcePort: "54321", RxPackets: 0},
-		{Type: "TYPE_END", CreatedAt: base.Add(35 * time.Second), FlowID: "flow2", ConnSourcePort: "54321", RxPackets: 100},
+		{Type: "TYPE_START", EventTime: base, FlowID: "flow1", ConnSourcePort: "54321", RxPackets: 0},
+		{Type: "TYPE_END", EventTime: base.Add(10 * time.Second), FlowID: "flow1", ConnSourcePort: "54321", RxPackets: 100},
+		{Type: "TYPE_START", EventTime: base.Add(25 * time.Second), FlowID: "flow2", ConnSourcePort: "54321", RxPackets: 0},
+		{Type: "TYPE_END", EventTime: base.Add(35 * time.Second), FlowID: "flow2", ConnSourcePort: "54321", RxPackets: 100},
 	}
 
 	sessions := SplitSessions(makeGrouped(defaultKey, events), 0.5)
@@ -159,10 +159,10 @@ func TestMergeSessions_SharedFlowIDMerges(t *testing.T) {
 
 	// flow1 appears in both split halves
 	events := []Event{
-		{Type: "TYPE_START", CreatedAt: base, FlowID: "flow1", ConnSourcePort: "10001", RxPackets: 0},
-		{Type: "TYPE_END", CreatedAt: base.Add(10 * time.Second), FlowID: "flow1", ConnSourcePort: "10001", RxPackets: 100},
-		{Type: "TYPE_START", CreatedAt: base.Add(25 * time.Second), FlowID: "flow1", ConnSourcePort: "10002", RxPackets: 0},
-		{Type: "TYPE_END", CreatedAt: base.Add(35 * time.Second), FlowID: "flow1", ConnSourcePort: "10002", RxPackets: 100},
+		{Type: "TYPE_START", EventTime: base, FlowID: "flow1", ConnSourcePort: "10001", RxPackets: 0},
+		{Type: "TYPE_END", EventTime: base.Add(10 * time.Second), FlowID: "flow1", ConnSourcePort: "10001", RxPackets: 100},
+		{Type: "TYPE_START", EventTime: base.Add(25 * time.Second), FlowID: "flow1", ConnSourcePort: "10002", RxPackets: 0},
+		{Type: "TYPE_END", EventTime: base.Add(35 * time.Second), FlowID: "flow1", ConnSourcePort: "10002", RxPackets: 100},
 	}
 
 	sessions := SplitSessions(makeGrouped(defaultKey, events), 0.5)
@@ -178,9 +178,9 @@ func TestSplitSessions_RuleIDTakenFromFirstNonEmpty(t *testing.T) {
 	base := t0()
 
 	events := []Event{
-		{Type: "TYPE_START", CreatedAt: base, FlowID: "flow1", ConnSourcePort: "10001", RxPackets: 0, RuleID: ""},
-		{Type: "TYPE_END", CreatedAt: base.Add(10 * time.Second), FlowID: "flow1", ConnSourcePort: "10001", RxPackets: 50, RuleID: "rule-first"},
-		{Type: "TYPE_END", CreatedAt: base.Add(20 * time.Second), FlowID: "flow1", ConnSourcePort: "10001", RxPackets: 10, RuleID: "rule-second"},
+		{Type: "TYPE_START", EventTime: base, FlowID: "flow1", ConnSourcePort: "10001", RxPackets: 0, RuleID: ""},
+		{Type: "TYPE_END", EventTime: base.Add(10 * time.Second), FlowID: "flow1", ConnSourcePort: "10001", RxPackets: 50, RuleID: "rule-first"},
+		{Type: "TYPE_END", EventTime: base.Add(20 * time.Second), FlowID: "flow1", ConnSourcePort: "10001", RxPackets: 10, RuleID: "rule-second"},
 	}
 
 	sessions := SplitSessions(makeGrouped(defaultKey, events), 0.5)
@@ -195,9 +195,9 @@ func TestSplitSessions_ResourceIDsPropagated(t *testing.T) {
 	base := t0()
 
 	events := []Event{
-		{Type: "TYPE_START", CreatedAt: base, FlowID: "flow1", ConnSourcePort: "10001", RxPackets: 0,
+		{Type: "TYPE_START", EventTime: base, FlowID: "flow1", ConnSourcePort: "10001", RxPackets: 0,
 			SourceResourceID: "src-res-1", DestResourceID: "dst-res-1"},
-		{Type: "TYPE_END", CreatedAt: base.Add(10 * time.Second), FlowID: "flow1", ConnSourcePort: "10001", RxPackets: 50},
+		{Type: "TYPE_END", EventTime: base.Add(10 * time.Second), FlowID: "flow1", ConnSourcePort: "10001", RxPackets: 50},
 	}
 
 	sessions := SplitSessions(makeGrouped(defaultKey, events), 0.5)
@@ -214,10 +214,10 @@ func TestMergeSessions_RuleIDFromFirstSessionPreserved(t *testing.T) {
 
 	// Two segments sharing source port 54321 — will be split then merged.
 	events := []Event{
-		{Type: "TYPE_START", CreatedAt: base, FlowID: "flow1", ConnSourcePort: "54321", RxPackets: 0, RuleID: "rule-A"},
-		{Type: "TYPE_END", CreatedAt: base.Add(10 * time.Second), FlowID: "flow1", ConnSourcePort: "54321", RxPackets: 100, RuleID: "rule-A"},
-		{Type: "TYPE_START", CreatedAt: base.Add(25 * time.Second), FlowID: "flow2", ConnSourcePort: "54321", RxPackets: 0, RuleID: "rule-B"},
-		{Type: "TYPE_END", CreatedAt: base.Add(35 * time.Second), FlowID: "flow2", ConnSourcePort: "54321", RxPackets: 100, RuleID: "rule-B"},
+		{Type: "TYPE_START", EventTime: base, FlowID: "flow1", ConnSourcePort: "54321", RxPackets: 0, RuleID: "rule-A"},
+		{Type: "TYPE_END", EventTime: base.Add(10 * time.Second), FlowID: "flow1", ConnSourcePort: "54321", RxPackets: 100, RuleID: "rule-A"},
+		{Type: "TYPE_START", EventTime: base.Add(25 * time.Second), FlowID: "flow2", ConnSourcePort: "54321", RxPackets: 0, RuleID: "rule-B"},
+		{Type: "TYPE_END", EventTime: base.Add(35 * time.Second), FlowID: "flow2", ConnSourcePort: "54321", RxPackets: 100, RuleID: "rule-B"},
 	}
 
 	sessions := SplitSessions(makeGrouped(defaultKey, events), 0.5)
@@ -233,12 +233,12 @@ func TestSplitSessions_OutputOrderedByStartTime(t *testing.T) {
 
 	grouped := map[[3]string][]Event{
 		{"sender", "router", "22"}: {
-			{Type: "TYPE_START", CreatedAt: base.Add(20 * time.Second), FlowID: "flow2", ConnSourcePort: "20002", RxPackets: 0},
-			{Type: "TYPE_END", CreatedAt: base.Add(30 * time.Second), FlowID: "flow2", ConnSourcePort: "20002", RxPackets: 50},
+			{Type: "TYPE_START", EventTime: base.Add(20 * time.Second), FlowID: "flow2", ConnSourcePort: "20002", RxPackets: 0},
+			{Type: "TYPE_END", EventTime: base.Add(30 * time.Second), FlowID: "flow2", ConnSourcePort: "20002", RxPackets: 50},
 		},
 		{"sender", "router", "3389"}: {
-			{Type: "TYPE_START", CreatedAt: base, FlowID: "flow1", ConnSourcePort: "10001", RxPackets: 0},
-			{Type: "TYPE_END", CreatedAt: base.Add(10 * time.Second), FlowID: "flow1", ConnSourcePort: "10001", RxPackets: 50},
+			{Type: "TYPE_START", EventTime: base, FlowID: "flow1", ConnSourcePort: "10001", RxPackets: 0},
+			{Type: "TYPE_END", EventTime: base.Add(10 * time.Second), FlowID: "flow1", ConnSourcePort: "10001", RxPackets: 50},
 		},
 	}
 

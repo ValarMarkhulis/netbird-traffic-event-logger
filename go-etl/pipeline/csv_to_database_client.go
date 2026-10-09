@@ -30,7 +30,9 @@ func SeedFromCSV(csvFile string, db database.Database) int {
 }
 
 // eventToEventLog converts a transformer.Event (from CSV) into a database.EventLog.
-// The gorm.Model.CreatedAt is pre-set to the CSV timestamp so GORM preserves it.
+// EventTime comes from the CSV. CreatedAt is pre-set to the same value so GORM
+// keeps it instead of using the insert time, letting the incremental ETL pick
+// seeded rows up in their original order.
 func eventToEventLog(e transformer.Event) database.EventLog {
 	ff := &database.FlowFields{
 		FlowId:           e.FlowID,
@@ -64,8 +66,9 @@ func eventToEventLog(e transformer.Event) database.EventLog {
 
 	return database.EventLog{
 		Model: gorm.Model{
-			CreatedAt: e.CreatedAt,
+			CreatedAt: e.EventTime,
 		},
+		EventTime:  e.EventTime,
 		EventId:    e.FlowID,
 		PublicKey:  e.PublicKey,
 		FlowFields: ff,

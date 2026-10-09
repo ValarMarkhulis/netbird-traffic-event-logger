@@ -11,9 +11,10 @@ import (
 	"github.com/ValarMarkhulis/traffic-event-logger/database"
 )
 
-func makeEventLog(createdAt time.Time, ff *database.FlowFields, publicKey string) database.EventLog {
+func makeEventLog(eventTime time.Time, ff *database.FlowFields, publicKey string) database.EventLog {
 	return database.EventLog{
-		Model:      gorm.Model{CreatedAt: createdAt},
+		Model:      gorm.Model{CreatedAt: eventTime},
+		EventTime:  eventTime,
 		PublicKey:  publicKey,
 		FlowFields: ff,
 	}
@@ -55,7 +56,18 @@ func TestExtractFromDB_TCPEvent(t *testing.T) {
 	assert.Equal(t, "3389", e.ConnDestPort)
 	assert.Equal(t, 10, e.RxPackets)
 	assert.Equal(t, 5, e.TxPackets)
-	assert.Equal(t, ts, e.CreatedAt)
+	assert.Equal(t, ts, e.EventTime)
+}
+
+func TestExtractFromDB_UsesEventTimeNotIngestTime(t *testing.T) {
+	happened := time.Date(2025, 1, 1, 12, 0, 13, 0, time.UTC)
+	e := makeEventLog(happened, &database.FlowFields{FlowId: "flow1", Protocol: "TCP"}, "peer1")
+	e.CreatedAt = happened.Add(47 * time.Second) // stored with a later report batch
+
+	events := ExtractFromDB([]database.EventLog{e})
+
+	require.Len(t, events, 1)
+	assert.Equal(t, happened, events[0].EventTime, "sessions must use the peer-side event time")
 }
 
 func TestExtractFromDB_ICMPEvent(t *testing.T) {
@@ -138,5 +150,5 @@ func TestExtractFromDB_PreservesCreatedAt(t *testing.T) {
 	events := ExtractFromDB(dbEvents)
 
 	require.Len(t, events, 1)
-	assert.Equal(t, ts, events[0].CreatedAt)
+	assert.Equal(t, ts, events[0].EventTime)
 }

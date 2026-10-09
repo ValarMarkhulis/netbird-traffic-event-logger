@@ -14,6 +14,7 @@ import (
 	"github.com/google/uuid"
 	proto "github.com/netbirdio/netbird/flow/proto"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // mockDB implements database.Database for testing without a real DB.
@@ -56,6 +57,7 @@ func makeTestEvent(eventID uuid.UUID) *proto.FlowEvent {
 	flowID := uuid.New()
 	return &proto.FlowEvent{
 		EventId:   eventID[:],
+		Timestamp: timestamppb.Now(),
 		PublicKey: []byte("testkey"),
 		FlowFields: &proto.FlowFields{
 			FlowId:    flowID[:],
@@ -92,6 +94,9 @@ func TestFlowEventToDatabaseEvent(t *testing.T) {
 		t.Fatalf("Failed to decode public key: %v", err)
 	}
 
+	eventTime := time.Date(2026, 10, 9, 18, 31, 2, 123456000, time.UTC)
+	eventTime2 := eventTime.Add(42 * time.Second)
+
 	tests := []struct {
 		name     string
 		input    *proto.FlowEvent
@@ -101,6 +106,7 @@ func TestFlowEventToDatabaseEvent(t *testing.T) {
 			name: "TCP Event",
 			input: &proto.FlowEvent{
 				EventId:   uuid01[:],
+				Timestamp: timestamppb.New(eventTime),
 				PublicKey: publicKey1,
 				FlowFields: &proto.FlowFields{
 					FlowId:           uuid02[:],
@@ -125,6 +131,7 @@ func TestFlowEventToDatabaseEvent(t *testing.T) {
 				},
 			},
 			expected: database.EventLog{
+				EventTime: eventTime,
 				EventId:   uuid01.String(),
 				PublicKey: publicKey1Encoded,
 				FlowFields: &database.FlowFields{
@@ -152,6 +159,7 @@ func TestFlowEventToDatabaseEvent(t *testing.T) {
 			name: "ICMP Event",
 			input: &proto.FlowEvent{
 				EventId:   uuid03[:],
+				Timestamp: timestamppb.New(eventTime2),
 				PublicKey: publicKey2,
 				FlowFields: &proto.FlowFields{
 					FlowId:           uuid04[:],
@@ -176,6 +184,7 @@ func TestFlowEventToDatabaseEvent(t *testing.T) {
 				},
 			},
 			expected: database.EventLog{
+				EventTime: eventTime2,
 				EventId:   uuid03.String(),
 				PublicKey: publicKey2Encoded,
 				FlowFields: &database.FlowFields{
@@ -208,6 +217,23 @@ func TestFlowEventToDatabaseEvent(t *testing.T) {
 			assert.Equal(t, tt.expected, result)
 		})
 	}
+}
+
+func TestFlowEventToDatabaseEvent_RequiresTimestamp(t *testing.T) {
+	eventID, flowID := uuid.New(), uuid.New()
+	newEvent := func(ts *timestamppb.Timestamp) *proto.FlowEvent {
+		return &proto.FlowEvent{
+			EventId:    eventID[:],
+			Timestamp:  ts,
+			FlowFields: &proto.FlowFields{FlowId: flowID[:], Protocol: uint32(database.TCP)},
+		}
+	}
+
+	_, err := FlowEventToDatabaseEvent(newEvent(nil))
+	assert.ErrorContains(t, err, "no valid timestamp", "missing timestamp")
+
+	_, err = FlowEventToDatabaseEvent(newEvent(&timestamppb.Timestamp{Seconds: -62135596801}))
+	assert.ErrorContains(t, err, "no valid timestamp", "out-of-range timestamp")
 }
 
 func TestFlowEventToDatabaseEvent_PanicHandling(t *testing.T) {

@@ -27,7 +27,7 @@ func IncrementalPipeline(
 	var results []database.SessionRecord
 	for key, groupEvents := range grouped {
 		sort.Slice(groupEvents, func(i, j int) bool {
-			return groupEvents[i].CreatedAt.Before(groupEvents[j].CreatedAt)
+			return groupEvents[i].EventTime.Before(groupEvents[j].EventTime)
 		})
 		sessions := applyGroupIncremental(getOpen(key[0], key[1], key[2]), groupEvents, key[0], key[1], key[2], threshold)
 		results = append(results, sessions...)
@@ -49,7 +49,7 @@ func applyGroupIncremental(
 	current := initFromExisting(existing, senderPeer, routingPeer, destPort)
 
 	for idx, ev := range events {
-		ts := ev.CreatedAt
+		ts := ev.EventTime
 
 		// Accumulate traffic and metadata into the current session.
 		current.RxPackets += int64(ev.RxPackets)
@@ -92,7 +92,7 @@ func applyGroupIncremental(
 
 	// Fallback: if no TYPE_START was seen, use the earliest event timestamp.
 	if current.StartTime.IsZero() && len(events) > 0 {
-		current.StartTime = events[0].CreatedAt
+		current.StartTime = events[0].EventTime
 	}
 
 	current.IsOpen = true
@@ -123,7 +123,7 @@ func exceedsThreshold(ev Event, current database.SessionRecord, threshold float6
 func hasGapAfter(events []Event, afterIdx int, ts time.Time) bool {
 	for j := afterIdx + 1; j < len(events); j++ {
 		if events[j].Type == "TYPE_START" {
-			return events[j].CreatedAt.Sub(ts).Seconds() > 2
+			return events[j].EventTime.Sub(ts).Seconds() > 2
 		}
 	}
 	return false

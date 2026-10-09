@@ -18,7 +18,7 @@ type Event struct {
 	SourceIP         string
 	DestIP           string
 	Type             string
-	CreatedAt        time.Time
+	EventTime        time.Time
 	RxPackets        int
 	TxPackets        int
 	RxBytes          int
@@ -89,7 +89,7 @@ func Extract(csvFile string) []Event {
 		for i, h := range headers {
 			m[h] = row[i]
 		}
-		createdAt := parseTimestamp(m["created_at"])
+		eventTime := parseTimestamp(m["event_time"])
 		events = append(events, Event{
 			Protocol:         m["protocol"],
 			ConnDestPort:     m["conn_dest_port"],
@@ -100,7 +100,7 @@ func Extract(csvFile string) []Event {
 			SourceIP:         m["source_ip"],
 			DestIP:           m["dest_ip"],
 			Type:             m["type"],
-			CreatedAt:        createdAt,
+			EventTime:        eventTime,
 			RxPackets:        safeInt(m["rx_packets"]),
 			TxPackets:        safeInt(m["tx_packets"]),
 			RxBytes:          safeInt(m["rx_bytes"]),

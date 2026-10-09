@@ -17,12 +17,12 @@ func SplitSessions(grouped map[[3]string][]Event, threshold float64) []data.Sess
 
 	for key, groupEvents := range grouped {
 		sort.Slice(groupEvents, func(i, j int) bool {
-			return groupEvents[i].CreatedAt.Before(groupEvents[j].CreatedAt)
+			return groupEvents[i].EventTime.Before(groupEvents[j].EventTime)
 		})
 		var groupSessions []data.Session
 		var current *data.Session
 		for idx, ev := range groupEvents {
-			ts := ev.CreatedAt
+			ts := ev.EventTime
 			if current == nil {
 				current = &data.Session{
 					FlowIDs:       make(map[string]struct{}),
@@ -104,7 +104,7 @@ func SplitSessions(grouped map[[3]string][]Event, threshold float64) []data.Sess
 						var nextStartTs *time.Time
 						for j := idx + 1; j < len(groupEvents); j++ {
 							if groupEvents[j].Type == "TYPE_START" {
-								nextStartTs = &groupEvents[j].CreatedAt
+								nextStartTs = &groupEvents[j].EventTime
 								break
 							}
 						}
@@ -129,11 +129,11 @@ func SplitSessions(grouped map[[3]string][]Event, threshold float64) []data.Sess
 			minTs := time.Time{}
 			maxTs := time.Time{}
 			for _, ev := range groupEvents {
-				if minTs.IsZero() || ev.CreatedAt.Before(minTs) {
-					minTs = ev.CreatedAt
+				if minTs.IsZero() || ev.EventTime.Before(minTs) {
+					minTs = ev.EventTime
 				}
-				if maxTs.IsZero() || ev.CreatedAt.After(maxTs) {
-					maxTs = ev.CreatedAt
+				if maxTs.IsZero() || ev.EventTime.After(maxTs) {
+					maxTs = ev.EventTime
 				}
 			}
 			if current.Start == nil || current.Start.IsZero() {
@@ -149,11 +149,11 @@ func SplitSessions(grouped map[[3]string][]Event, threshold float64) []data.Sess
 			minTs := time.Time{}
 			maxTs := time.Time{}
 			for _, ev := range groupEvents {
-				if minTs.IsZero() || ev.CreatedAt.Before(minTs) {
-					minTs = ev.CreatedAt
+				if minTs.IsZero() || ev.EventTime.Before(minTs) {
+					minTs = ev.EventTime
 				}
-				if maxTs.IsZero() || ev.CreatedAt.After(maxTs) {
-					maxTs = ev.CreatedAt
+				if maxTs.IsZero() || ev.EventTime.After(maxTs) {
+					maxTs = ev.EventTime
 				}
 			}
 			if sess.Start == nil || sess.Start.IsZero() {

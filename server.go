@@ -535,7 +535,13 @@ func FlowEventToDatabaseEvent(event *proto.FlowEvent) (dbEvent database.EventLog
 		event.FlowFields.RxPackets, "TX_Packets", event.FlowFields.TxPackets, "RX_Bytes",
 		event.FlowFields.RxBytes, "TX_Bytes", event.FlowFields.TxBytes)
 
+	if ts := event.GetTimestamp(); ts == nil || !ts.IsValid() {
+		return dbEvent, fmt.Errorf("event %s has no valid timestamp", eventUUID)
+	}
+	eventTime := event.GetTimestamp().AsTime()
+
 	dbEvent = database.EventLog{
+		EventTime: eventTime,
 		EventId:   eventUUID.String(),
 		PublicKey: publicKey,
 		FlowFields: &database.FlowFields{
