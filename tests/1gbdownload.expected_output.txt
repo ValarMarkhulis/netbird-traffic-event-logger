@@ -1,0 +1,48 @@
+Session 1: IAnonPeer3AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= sent ICMP via cAnonPeer4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= as routing peer.
+  Flow IDs: 2a5951a3-a615-4283-83f2-de7a6271deb7
+  Source ports used: 
+  Source IPs: 100.67.162.190
+  Destination IPs: 192.168.0.75
+  Start: 2026-03-07 16:03:19.795485
+  End:   2026-03-07 16:03:59.804946
+  RX Packets: 10
+  TX Packets: 11
+  RX Bytes:   1000
+  TX Bytes:   924
+
+Session 2: IAnonPeer3AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= connected to port 8090/TCP via cAnonPeer4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= as routing peer.
+  Flow IDs: e2c92dbb-dd9c-4cd4-9f71-83a9c16b5888
+  Source ports used: 49856
+  Source IPs: 100.67.162.190
+  Destination IPs: 192.168.0.75
+  Start: 2026-03-07 16:03:39.813986
+  End:   2026-03-07 16:03:39.816615
+  RX Packets: 5
+  TX Packets: 6
+  RX Bytes:   903
+  TX Bytes:   408
+
+Session 3: IAnonPeer3AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= connected to port 8090/TCP via cAnonPeer4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= as routing peer.
+  Flow IDs: 6c38b8db-06ec-4942-a0e2-8318e7bba1c4
+  Source ports used: 42350
+  Source IPs: 100.67.162.190
+  Destination IPs: 192.168.0.75
+  Start: 2026-03-07 16:08:00.079879
+  End:   2026-03-07 16:08:00.119694
+  RX Packets: 72
+  TX Packets: 70
+  RX Bytes:   70176
+  TX Bytes:   4020
+
+Session 4: IAnonPeer3AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= connected to port 8090/TCP via cAnonPeer4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= as routing peer.
+  Flow IDs: 9c7c7404-fcda-4c4e-877f-ebfeb75e5d2e
+  Source ports used: 40416
+  Source IPs: 100.67.162.190
+  Destination IPs: 192.168.0.75
+  Start: 2026-03-07 16:08:10.046630
+  End:   2026-03-07 16:11:49.209703
+  RX Packets: 887190
+  TX Packets: 247484
+  RX Bytes:   1136170880
+  TX Bytes:   12869268
+

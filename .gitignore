@@ -1,0 +1,6 @@
+*debug_bin*
+.env
+flow-server
+**/etl_runner
+flow-client
+test.csv

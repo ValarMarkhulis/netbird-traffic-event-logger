@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: netbird_traffic_postgres
+    environment:
+      POSTGRES_DB: netbird_traffic_event_logging
+      POSTGRES_USER: netbird
+      POSTGRES_PASSWORD: netbird
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U netbird -d netbird_traffic_event_logging"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+volumes:
+  postgres_data:

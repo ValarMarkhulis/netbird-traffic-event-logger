@@ -1,0 +1,115 @@
+services:
+   # Caddy reverse proxy
+  caddy:
+    image: caddy:2.11
+    restart: unless-stopped
+    networks:
+      - netbird
+    ports:
+      - '443:443'
+    volumes:
+      - netbird_caddy_data:/data
+      - ./Caddyfile:/etc/caddy/Caddyfile
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "500m"
+        max-file: "2"
+
+
+  # Flow server
+  flow-server:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: flow-server
+    restart: unless-stopped
+    #ports:
+    #  - "9000:9000"
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-netbird}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-netbird}
+      - DATABASE_ADDR=postgres
+      - POSTGRES_DB=${POSTGRES_DB:-netbird_traffic_event_logging}
+      - POSTGRES_PORT=5432
+      - POSTGRES_SSL=disable
+      # Required: shared HMAC secret used to verify client tokens. Without it
+      # the server accepts events from ANY client with no authentication.
+      # Set this in docker/.env (see docker/.env.example) — deployment fails
+      # fast if it's missing rather than silently running unauthenticated.
+      - NB_FLOW_SECRET=${NB_FLOW_SECRET:?NB_FLOW_SECRET must be set — see docker/.env.example}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "grpc_health_probe", "-addr=:9000"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - netbird
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "500m"
+        max-file: "2"
+
+  etl:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.etl
+    container_name: go-etl
+    environment:
+      - ETL_INTERVAL=300
+      - POSTGRES_USER=${POSTGRES_USER:-netbird}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-netbird}
+      - POSTGRES_DB=${POSTGRES_DB:-netbird_traffic_event_logging}
+      - DATABASE_ADDR=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_SSL=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+      flow-server:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - netbird
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "2"
+
+  postgres:
+    image: postgres:17
+    container_name: netbird_traffic_postgres
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-netbird_traffic_event_logging}
+      - POSTGRES_USER=${POSTGRES_USER:-netbird}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-netbird}
+    #ports:
+    #  - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U netbird -d netbird_traffic_event_logging"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - netbird
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "500m"
+        max-file: "2"
+
+volumes:
+  netbird_caddy_data:
+  postgres_data:
+
+networks:
+  netbird:

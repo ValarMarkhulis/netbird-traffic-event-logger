@@ -1,0 +1,48 @@
+Session 1: dAnonPeer5AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= sent ICMP via EAnonPeer2AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= as routing peer.
+  Flow IDs: db1f5e69-699f-4035-94f1-4d2fa4954261
+  Source ports used: 
+  Source IPs: 100.67.146.229
+  Destination IPs: 192.168.4.2
+  Start: 2025-12-06 12:32:09.234057
+  End:   2025-12-06 12:32:54.234835
+  RX Packets: 4
+  TX Packets: 5
+  RX Bytes:   304
+  TX Bytes:   300
+
+Session 2: dAnonPeer5AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= connected to port 4321/TCP via EAnonPeer2AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= as routing peer.
+  Flow IDs: 0a285a19-9873-4940-abfe-8e6916e182d1, 0f32f7cb-3a6e-4649-b55e-3585440bc625, 1bd94236-3258-4ddc-95a8-79dfbadb85e8, 59667e2b-eab2-4f59-9910-e57466b7600c, bec6d9a9-6692-4326-8ec6-c1b8a46b403c, d6b72db8-7551-41c6-9076-041f21c11486, e5b828d4-a06c-432c-8314-06505066fc6a
+  Source ports used: 53384, 55652, 55886, 57766, 58155, 60517, 61973
+  Source IPs: 100.67.146.229
+  Destination IPs: 192.168.4.2
+  Start: 2025-12-06 12:32:14.232884
+  End:   2025-12-06 12:33:15.251286
+  RX Packets: 11433
+  TX Packets: 5703
+  RX Bytes:   14083351
+  TX Bytes:   230804
+
+Session 3: dAnonPeer5AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= connected to port 3389/TCP via EAnonPeer2AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= as routing peer.
+  Flow IDs: 171c94b9-f356-4f8b-8489-00d447160e17, 9110e9ba-1fe8-477a-a14c-13ca1d0dad73
+  Source ports used: 55742, 55749
+  Source IPs: 100.67.146.229
+  Destination IPs: 192.168.4.2
+  Start: 2025-12-06 12:32:29.250127
+  End:   2025-12-06 12:32:29.238342
+  RX Packets: 11
+  TX Packets: 12
+  RX Bytes:   1810
+  TX Bytes:   1974
+
+Session 4: dAnonPeer5AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= connected to port 3389/UDP via EAnonPeer2AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= as routing peer.
+  Flow IDs: 0a5a39de-a3e4-4d32-9adc-b9c9a45b6b96
+  Source ports used: 64725
+  Source IPs: 100.67.146.229
+  Destination IPs: 192.168.4.2
+  Start: 2025-12-06 12:32:34.234284
+  End:   <none>
+  RX Packets: 0
+  TX Packets: 1
+  RX Bytes:   0
+  TX Bytes:   1260
+

@@ -1,0 +1,36 @@
+Session 1: hAnonPeer6AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= connected to port 3389/TCP via EAnonPeer2AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= as routing peer.
+  Flow IDs: 0519d5e1-d8f8-577a-9bad-593ab705a3d9
+  Source ports used: 34150
+  Source IPs: 100.67.100.170
+  Destination IPs: 192.168.4.2
+  Start: 2025-12-06 16:10:46.627779
+  End:   2025-12-06 16:13:31.632352
+  RX Packets: 0
+  TX Packets: 0
+  RX Bytes:   0
+  TX Bytes:   0
+
+Session 2: dAnonPeer5AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= connected to port 3389/TCP via EAnonPeer2AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= as routing peer.
+  Flow IDs: a5093fd4-c678-4a2a-8b02-782abe2be126, c2a3ff26-fc11-42b8-bdac-6f9531f7be90
+  Source ports used: 56468, 56471
+  Source IPs: 100.67.146.229
+  Destination IPs: 192.168.4.2
+  Start: 2025-12-06 16:11:06.068125
+  End:   2025-12-06 16:11:21.061947
+  RX Packets: 87
+  TX Packets: 76
+  RX Bytes:   13306
+  TX Bytes:   11454
+
+Session 3: dAnonPeer5AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= connected to port 3389/UDP via EAnonPeer2AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= as routing peer.
+  Flow IDs: 8ccb5c8a-bdd9-4578-8f3b-b7dc043dc3d2
+  Source ports used: 57608
+  Source IPs: 100.67.146.229
+  Destination IPs: 192.168.4.2
+  Start: 2025-12-06 16:11:11.061948
+  End:   2025-12-06 16:11:56.072685
+  RX Packets: 585
+  TX Packets: 544
+  RX Bytes:   482114
+  TX Bytes:   351656
+
