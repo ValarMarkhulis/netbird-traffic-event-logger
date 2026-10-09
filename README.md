@@ -36,6 +36,16 @@ a specific network route and policy in the Netbird Dashboard. The relevant data 
 - Type
 - Volume of Data
 
+## Traffic Events in the NetBird dashboard
+
+With the [modified NetBird management service](https://github.com/ValarMarkhulis/netbird/tree/v0.53.0-traffic-event-logging-unlocked)
+pointed at this project's database (`NB_NETWORK_TRAFFIC_POSTGRES_DSN`), management serves
+`GET /api/events/network-traffic` from `event_logs`, and the stock dashboard's
+**Activity → Traffic Events** page renders it. Peer-to-peer and routed (Networks resource)
+flows are shown with their start and stop times, protocol, ports and traffic volume:
+
+![Traffic Events page in the NetBird dashboard (v2.80.0, management v0.53.0) showing P2P and routed flows](docs/images/traffic-events-dashboard.png)
+
 
 ## Overall architecture
 
